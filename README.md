@@ -1,13 +1,13 @@
 # <img src="https://raw.githubusercontent.com/I5UCC/VRCTextboxSTT/main/src/resources/icon.ico" width="32" height="32"> TextboxSTT 
 [![Github All Releases](https://img.shields.io/github/downloads/i5ucc/VRCTextboxSTT/total.svg)](https://github.com/I5UCC/VRCTextboxSTT/releases/latest)
 [![GitHub release (latest by date)](https://img.shields.io/github/downloads/i5ucc/VRCTextboxSTT/latest/total?label=Latest%20version%20downloads)](https://github.com/I5UCC/VRCTextboxSTT/releases/latest)
-<a href='https://ko-fi.com/i5ucc' target='_blank'><img height='35' style='border:0px;height:25px;' src='https://az743702.vo.msecnd.net/cdn/kofi3.png?v=0' border='0' alt='Buy Me a Coffee at ko-fi.com' />
+<a href='https://ko-fi.com/i5ucc' target='_blank'><img height='35' style='border:0px;height:25px;' src='https://az743702.vo.msecnd.net/cdn/kofi3.png?v=0' border='0' alt='Buy I5UCC a Coffee at ko-fi.com' />
 
-A SpeechToText application that uses [OpenAI's whisper](https://github.com/openai/whisper) via [faster-whisper](https://github.com/guillaumekln/faster-whisper) to transcribe audio and send that information to VRChats textbox system and/or [KillFrenzyAvatarText](https://github.com/killfrenzy96/KillFrenzyAvatarText) over OSC. Also supports OBS via Browsersource and a SteamVR overlay!
+A SpeechToText application that supports [OpenAI's Whisper](https://github.com/openai/whisper) (via [faster-whisper](https://github.com/guillaumekln/faster-whisper)) and [Cactus Compute's Whistle](https://github.com/cactus-compute/needle) to transcribe audio and send that information to VRChats textbox system and/or [KillFrenzyAvatarText](https://github.com/killfrenzy96/KillFrenzyAvatarText) over OSC. Also supports OBS via Browsersource and a SteamVR overlay!
 > [!NOTE]
 > This program is designed to be completely free of charge, open source, and independent from Cloud-Based Transcription services such as Microsoft Azure. It accomplishes this by utilizing transcription algorithms that run on your own hardware, thereby upholding privacy, enhancing latency, and ensuring reliability. As a result, I will not be incorporating any cloud-based transcription or translation services into this program.
 
-### [<img src="https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6ca814282eca7172c6_icon_clyde_white_RGB.svg"  width="20" height="20"> Discord Support Server](https://discord.gg/rqcWHje3hn)
+### [<img src="https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6ca814282eca7172c6_icon_clyde_white_RGB.svg"  width="20" height="20"> Original Support Discord (I5UCC's Discord)](https://discord.gg/rqcWHje3hn)
 
 ### [🢃 Download Latest Release](https://github.com/I5UCC/VRCTextboxSTT/releases/latest)
 
@@ -22,7 +22,8 @@ A SpeechToText application that uses [OpenAI's whisper](https://github.com/opena
   - OBS over Browser Source!
   - Websockets
 - ***SteamVR Overlay*** for seeing your transcription without having to look at your own textbox in-game.
-- ***Fast and Efficient***. VRCTextboxSTT uses [ctranslate2](https://github.com/OpenNMT/CTranslate2) as the runtime for transcription and translation, which makes it incredibly efficient and fast.
+- ***Fast and Efficient***. VRCTextboxSTT uses [ctranslate2](https://github.com/OpenNMT/CTranslate2) as the runtime for Whisper transcription and translation, which makes it incredibly efficient and fast.
+- ***Whistle Model Support***. Select [Cactus Compute's Whistle](https://github.com/cactus-compute/needle) model—a single 16.9 MB file providing lightning-fast on-device CPU transcription across 7 languages (English, German, French, Spanish, Italian, Dutch, Polish) with automatic language detection, native silence detection, and zero GPU requirement.
 - ***Uses Steam Input***, press to transcribe, hold to clear/cancel (A/X by default). Also works on desktop with the "F1" Key by default.
 - ***Customizable***
   - You can bind the button to start transcription to any action that SteamVR allows you to set.
@@ -72,7 +73,8 @@ With default settings, this program has following requirements:
 
 > [!NOTE]
 > Depending on settings changed in the program those requirements can change drastically. <br>
-> VRAM usages per Model: (int8 Precision. English models only) <br>
+> **Whistle (Cactus Compute)**: Single 16.9 MB file, runs purely on CPU with minimal RAM (~150MB) and zero VRAM. <br>
+> VRAM usages per Whisper Model: (int8 Precision. English models only) <br>
 > ~200MB with tiny.en <br>
 > ~220MB with base.en <br>
 > ~320MB with distil-small.en <br>
@@ -101,12 +103,13 @@ There are similar projects that already exist that you might want to consider us
 
 # Support this Project
 
-You can always leave a Github Star 🟊 (It's free) or buy me a coffee:<br /> 
+You can always leave a Github Star 🟊 (It's free) or buy I5UCC a coffee:<br /> 
 
-<a href='https://ko-fi.com/i5ucc' target='_blank'><img height='35' style='border:0px;height:35px;' src='https://az743702.vo.msecnd.net/cdn/kofi3.png?v=0' border='0' alt='Buy Me a Coffee at ko-fi.com' /><br />
+<a href='https://ko-fi.com/i5ucc' target='_blank'><img height='35' style='border:0px;height:35px;' src='https://az743702.vo.msecnd.net/cdn/kofi3.png?v=0' border='0' alt='Buy I5UCC a Coffee at ko-fi.com' /><br />
 
 # Credit
-- [OpenAI](https://github.com/openai) for their amazing work with anything really.
+- [OpenAI](https://github.com/openai) for their amazing work with Whisper.
+- [Cactus Compute](https://github.com/cactus-compute/needle) for the Whistle speech-to-text model and Needle engine.
 - [SYSTRAN/faster-whisper](https://github.com/SYSTRAN/faster-whisper) and [ctranslate2](https://github.com/OpenNMT/CTranslate2), their work makes this project much more efficent and faster then it otherwise would be.
 - [ValveSoftware/openvr](https://github.com/ValveSoftware/openvr) and [cmbruns/pyopenvr](https://github.com/cmbruns/pyopenvr)
 - [Uberi/speech_recognition](https://github.com/Uberi/speech_recognition) and [jleb/pyaudio](https://github.com/jleb/pyaudio)
