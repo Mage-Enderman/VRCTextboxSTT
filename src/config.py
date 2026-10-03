@@ -114,6 +114,7 @@ LANGUAGE_TO_FONT = {
 }
 
 WHISPER_MODELS = {
+    'whistle': 'whistle',
     'tiny': 'openai/whisper-tiny',
     'tiny.en': 'openai/whisper-tiny.en',
     'base': 'openai/whisper-base',
@@ -130,6 +131,8 @@ WHISPER_MODELS = {
     'distil-medium': "distil-whisper/distil-medium.en",
     'distil-large-v2': "distil-whisper/distil-large-v2"
 }
+
+WHISTLE_SUPPORTED_LANGUAGES = {'en', 'de', 'fr', 'es', 'it', 'nl', 'pl'}
 
 TRANSLATE_MODELS = {
     "small": "facebook/m2m100_418M",

@@ -187,7 +187,7 @@ class Configurator(tk.Tk):
         opt_device.configure(bg="#333333", fg="white", font=(self.FONT, 10), width=30, anchor="w", highlightthickness=0, activebackground="#555555", activeforeground="white")
         opt_device.pack(padx=0, pady=35)
 
-        label3 = tk.Label(page, text="Select the model you want to use for the transcription. read the #Requirements for more information.", wraplength=420, bg="#333333", fg="white", font=(self.FONT, 10))
+        label3 = tk.Label(page, text="Select the model you want to use for the transcription (e.g. 'whistle' for fast lightweight CPU, or Whisper models). Read the #Requirements for more information.", wraplength=420, bg="#333333", fg="white", font=(self.FONT, 10))
         label3.pack(padx=0, pady=0)
 
         value_model = tk.StringVar(page)

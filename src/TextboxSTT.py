@@ -207,7 +207,8 @@ def init():
 
     # Temporarily output to text label for download progress.
     OUT_FILE_LOGGER.set_ui_output(main_window.loading_status)
-    main_window.set_status_label("LOADING WHISPER MODEL", "orange")
+    _model_name = config.whisper.model.lower()
+    main_window.set_status_label("LOADING WHISTLE MODEL" if "whistle" in _model_name else "LOADING WHISPER MODEL", "orange")
     # Initialize TranscribeHandler
     if not transcriber:
         transcriber = TranscribeHandler(copy.deepcopy(config.whisper), config.vad, CACHE_PATH, config.translator.language == "english")

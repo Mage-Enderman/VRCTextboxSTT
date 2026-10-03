@@ -381,7 +381,7 @@ class SettingsWindow:
 
         self.label_model = tk.Label(master=self.tkui, bg="#333333", fg="white", text='Model *', font=(self.FONT, 12))
         self.label_model.grid(row=4, column=0, padx=PADX_L, pady=PADY, sticky='es')
-        self.label_model.bind("<Enter>", (lambda event: self.show_tooltip("What model of whisper to use. \nI'd recommend not going over 'tiny,base,small'\n as it will significantly impact the transcription time.")))
+        self.label_model.bind("<Enter>", (lambda event: self.show_tooltip("Speech-to-text model to use. \n'whistle': ultra-fast & lightweight (17 MB, CPU, 7 languages).\nWhisper: 'tiny', 'base', 'small', 'distil-*', etc.")))
         self.label_model.bind("<Leave>", self.hide_tooltip)
         self.value_model = tk.StringVar(self.tkui)
         self.value_model.set(self.config.whisper.model)
@@ -401,7 +401,7 @@ class SettingsWindow:
         self.opt_model = tk.OptionMenu(self.tkui, self.value_model, *self.models)
         self.opt_model.configure(bg="#333333", fg="white", font=(self.FONT, 10), width=19, anchor="w", highlightthickness=0, activebackground="#555555", activeforeground="white")
         self.opt_model.grid(row=4, column=1, padx=PADX_R, pady=PADY, sticky='ws')
-        self.opt_model.bind("<Enter>", (lambda event: self.show_tooltip("What model of whisper to use. \nI'd recommend not going over 'tiny,base,small'\n as it will significantly impact the transcription time.")))
+        self.opt_model.bind("<Enter>", (lambda event: self.show_tooltip("Speech-to-text model to use. \n'whistle': ultra-fast & lightweight (17 MB, CPU, 7 languages).\nWhisper: 'tiny', 'base', 'small', 'distil-*', etc.")))
         self.opt_model.bind("<Leave>", self.hide_tooltip)
 
         self.label_vad = tk.Label(master=self.tkui, bg="#333333", fg="white", text='Voice Activity Detection', font=(self.FONT, 12))

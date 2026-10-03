@@ -94,7 +94,7 @@ class TranslationHandler(object):
             j: dict = json.load(open(self.model_path + "config.json"))
             j.update({"model_type": "m2m_100"})
             json.dump(j, open(self.model_path + "config.json", "w"), indent=4)
-            rmtree(os.path.join(os.path.expanduser("~"), ".cache\huggingface"))
+            rmtree(os.path.join(os.path.expanduser("~"), ".cache", "huggingface"))
         except RuntimeError:
             log.info("Model already exists, skipping conversion.")
         except FileNotFoundError:
