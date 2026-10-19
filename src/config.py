@@ -115,6 +115,7 @@ LANGUAGE_TO_FONT = {
 
 WHISPER_MODELS = {
     'whistle': 'whistle',
+    'phonon-2': 'phonon-2',
     'tiny': 'openai/whisper-tiny',
     'tiny.en': 'openai/whisper-tiny.en',
     'base': 'openai/whisper-base',

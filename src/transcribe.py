@@ -33,6 +33,7 @@ class TranscribeHandler(object):
         
         raw_model = self.config_whisper.model.strip().lower()
         self.is_whistle = (raw_model == "whistle" or raw_model.endswith("/whistle") or "whistle" in raw_model)
+        self.is_phonon = (raw_model == "phonon-2" or "phonon" in raw_model)
 
         if self.is_whistle:
             self.whisper_model = "whistle"
@@ -63,6 +64,58 @@ class TranscribeHandler(object):
                 raise RuntimeError("Whistle STT engine 'cactus-needle' is not installed. Run 'pip install cactus-needle[mic]' to use Whistle.")
             except Exception:
                 log.error("Failed to load Whistle model: ")
+                log.error(traceback.format_exc())
+                raise
+        elif self.is_phonon:
+            self.whisper_model = "phonon-2"
+            self.is_openai_model = False
+            self.task = "transcribe"
+            self.language = "en"
+            if self.config_whisper.language and self.config_whisper.language.lower() not in ("en", "english"):
+                log.warning(f"Phonon-2 only supports English. Selected language '{self.config_whisper.language}' will be ignored.")
+
+            target_device = str(self.device_config.type).lower() if self.device_config.type else "cpu"
+            if target_device != "cpu" and torch.cuda.is_available():
+                self.device = "cuda"
+                self.device_index = self.device_config.index
+                self.device_name = f"GPU ({torch.cuda.get_device_name(self.device_index)})"
+                self.use_cpu = False
+                # Configure FERMION_DEVICE for GPU/CUDA if supported by the runtime platform
+                os.environ["FERMION_DEVICE"] = "gpu"
+            else:
+                if target_device != "cpu" and not torch.cuda.is_available():
+                    log.warning("GPU device requested for Phonon-2, but CUDA is unavailable. Falling back to CPU.")
+                self.device = "cpu"
+                self.device_index = 0
+                self.device_name = "CPU (Phonon-2)"
+                self.use_cpu = True
+                os.environ["FERMION_DEVICE"] = "cpu"
+
+            self.compute_type = "five-value (int6)"
+            self.model_path = "phonon-2"
+
+            try:
+                import fermion
+                try:
+                    self.model = fermion.load_speech("phonon-2")
+                except SystemExit as se:
+                    # If GPU engine is unavailable on this platform (e.g. Windows without MLX), fallback cleanly to CPU engine
+                    if os.environ.get("FERMION_DEVICE") != "cpu":
+                        log.warning(f"Failed to load Phonon-2 on GPU ({se}); falling back to CPU engine.")
+                        os.environ["FERMION_DEVICE"] = "cpu"
+                        self.device = "cpu"
+                        self.device_index = 0
+                        self.device_name = "CPU (Phonon-2)"
+                        self.use_cpu = True
+                        self.model = fermion.load_speech("phonon-2")
+                    else:
+                        raise
+                log.info(f"Initialized Phonon-2 speech-to-text model on {self.device_name}.")
+            except ImportError:
+                log.error("fermion-research is not installed! Please run: pip install fermion-research soundfile zstandard")
+                raise RuntimeError("Phonon-2 STT engine 'fermion-research' is not installed. Run 'pip install fermion-research soundfile zstandard' to use Phonon-2.")
+            except Exception:
+                log.error("Failed to load Phonon-2 model: ")
                 log.error(traceback.format_exc())
                 raise
         else:
@@ -136,6 +189,22 @@ class TranscribeHandler(object):
                     return result.get("text", "").strip() if result else ""
                 except Exception:
                     log.error("Error transcribing with Whistle: ")
+                    log.error(traceback.format_exc())
+                    return None
+
+        if self.is_phonon:
+            if audio.dtype != float32:
+                audio = audio.astype(float32)
+
+            with self._lock:
+                try:
+                    # fermion transcribe_array returns (text, decode_seconds, audio_seconds)
+                    res = self.model.transcribe_array(audio)
+                    if isinstance(res, (tuple, list)):
+                        return str(res[0]).strip()
+                    return str(res).strip()
+                except Exception:
+                    log.error("Error transcribing with Phonon-2: ")
                     log.error(traceback.format_exc())
                     return None
 

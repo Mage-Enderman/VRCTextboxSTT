@@ -23,6 +23,7 @@ A SpeechToText application that supports [OpenAI's Whisper](https://github.com/o
   - Websockets
 - ***SteamVR Overlay*** for seeing your transcription without having to look at your own textbox in-game.
 - ***Fast and Efficient***. VRCTextboxSTT uses [ctranslate2](https://github.com/OpenNMT/CTranslate2) as the runtime for Whisper transcription and translation, which makes it incredibly efficient and fast.
+- ***Phonon-2 Model Support***. Select [Fermion Research's Phonon-2](https://www.fermionresearch.com/models/phonon-2/) model (`phonon-2`)—a heavily compressed 164 MB English-only speech recognition model offering 5.21% average WER, fast processing with word timestamps, and full user-selectable CPU or GPU execution.
 - ***Whistle Model Support***. Select [Cactus Compute's Whistle](https://github.com/cactus-compute/needle) model—a single 16.9 MB file providing lightning-fast on-device CPU transcription across 7 languages (English, German, French, Spanish, Italian, Dutch, Polish) with automatic language detection, native silence detection, and zero GPU requirement.
 - ***Uses Steam Input***, press to transcribe, hold to clear/cancel (A/X by default). Also works on desktop with the "F1" Key by default.
 - ***Customizable***
@@ -73,7 +74,8 @@ With default settings, this program has following requirements:
 
 > [!NOTE]
 > Depending on settings changed in the program those requirements can change drastically. <br>
-> **Whistle (Cactus Compute)**: Single 16.9 MB file, runs purely on CPU with minimal RAM (~150MB) and zero VRAM. <br>
+> **Phonon-2 (Fermion Research)**: 164 MB download size, English-only speech recognition model based on FastConformer/TDT with ~5.21% WER, supporting both CPU and GPU execution. <br>
+> **Whistle (Cactus Compute)**: Single 16.9 MB file, runs purely on CPU with minimal RAM (~150MB) and zero VRAM across 7 languages. <br>
 > VRAM usages per Whisper Model: (int8 Precision. English models only) <br>
 > ~200MB with tiny.en <br>
 > ~220MB with base.en <br>
