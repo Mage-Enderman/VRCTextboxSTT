@@ -95,8 +95,20 @@ class TranscribeHandler(object):
             self.compute_type = "five-value (int6)"
             self.model_path = "phonon-2"
 
+            # Pre-configure thread count and silence PowerShell window popup on Windows
+            num_threads = self.device_config.cpu_threads if self.device_config.cpu_threads else (os.cpu_count() or 4)
+            os.environ["FERMION_CPU_THREADS"] = str(num_threads)
+
             try:
                 import fermion
+                # Defensive check: if fermion internal cpu engine module has _physical_cores_windows, avoid spawning a visible PowerShell window
+                try:
+                    from fermion._speech import engine_phonon2_cpu as _p2_cpu
+                    if hasattr(_p2_cpu, "_physical_cores_windows"):
+                        _p2_cpu._physical_cores_windows = lambda: (os.cpu_count() or 4)
+                except Exception:
+                    pass
+
                 try:
                     self.model = fermion.load_speech("phonon-2")
                 except SystemExit as se:
