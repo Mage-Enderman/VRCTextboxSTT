@@ -9,7 +9,7 @@ A SpeechToText application that supports [OpenAI's Whisper](https://github.com/o
 
 ### [<img src="https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6ca814282eca7172c6_icon_clyde_white_RGB.svg"  width="20" height="20"> Original Support Discord (I5UCC's Discord)](https://discord.gg/rqcWHje3hn)
 
-### [🢃 Download Latest Release](https://github.com/I5UCC/VRCTextboxSTT/releases/latest)
+### [🢃 Download Latest Release](https://github.com/Mage-Enderman/VRCTextboxSTT/releases/latest)
 
 # Features
 
