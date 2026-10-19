@@ -1,0 +1,135 @@
+name: Build Windows Application
+
+on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+    inputs:
+      publish_release:
+        description: 'Publish as a GitHub Release?'
+        type: boolean
+        default: false
+        required: false
+      tag_name:
+        description: 'Release tag (optional, e.g. v2.1.6; defaults to src/VERSION)'
+        type: string
+        default: ''
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build (windows-latest)
+    runs-on: windows-latest
+    outputs:
+      app_version: ${{ steps.package.outputs.app_version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Build Launcher Executables
+        shell: pwsh
+        run: |
+          dotnet publish TextboxSTT_Launcher/TextboxSTT_Launcher.sln -c Release -r win-x64
+
+      - name: Package Windows Application
+        id: package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $staging = "build/TextboxSTT"
+          if (Test-Path "build") { Remove-Item -Recurse -Force "build" }
+          New-Item -ItemType Directory -Force -Path $staging | Out-Null
+
+          Write-Host "Copying built launcher executables..."
+          Copy-Item "TextboxSTT_Launcher/TextboxSTT_Launcher/bin/Release/net4.8.1/win-x64/publish/TextboxSTT_Launcher.exe" "$staging/TextboxSTT.exe" -Force
+          Copy-Item "TextboxSTT_Launcher/obs_only_Launcher/bin/Release/net4.8.1/win-x64/publish/obs_only_Launcher.exe" "$staging/obs_only.exe" -Force
+          Copy-Item "TextboxSTT_Launcher/VRCaptions_Launcher/bin/Release/net4.8.1/win-x64/publish/VRCaptions_Launcher.exe" "$staging/VRCaptions.exe" -Force
+
+          Write-Host "Copying source directory..."
+          Copy-Item -Recurse "src" "$staging/src"
+
+          if (Test-Path "README.md") { Copy-Item "README.md" "$staging/" }
+          if (Test-Path "LICENSE") { Copy-Item "LICENSE" "$staging/" }
+
+          Write-Host "Extracting bundled Python and Git..."
+          7z x git_python.7z -o"$staging" -y | Out-Null
+
+          Write-Host "Upgrading pip in bundled Python..."
+          & "$staging/python/python.exe" -m pip install --upgrade pip
+
+          # Clean up any temporary caches created during pip upgrade
+          if (Test-Path "$staging/python/cache") {
+              Remove-Item -Recurse -Force "$staging/python/cache"
+          }
+
+          # Read version string
+          $version = "latest"
+          if (Test-Path "src/VERSION") {
+              $version = (Get-Content "src/VERSION" -Raw).Trim()
+          }
+          Write-Host "Packaging TextboxSTT version: $version"
+          "app_version=$version" >> $env:GITHUB_OUTPUT
+
+          New-Item -ItemType Directory -Force -Path "dist" | Out-Null
+
+          Write-Host "Creating zip package..."
+          Push-Location build
+          7z a -tzip -mx=7 "../dist/TextboxSTT.zip" "TextboxSTT"
+          Pop-Location
+
+          Write-Host "Artifact ready at dist/TextboxSTT.zip"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TextboxSTT-Windows
+          path: dist/TextboxSTT.zip
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.publish_release == true)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: TextboxSTT-Windows
+          path: dist
+
+      - name: Determine Release Tag
+        id: release_info
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          elif [[ -n "${{ inputs.tag_name }}" ]]; then
+            TAG="${{ inputs.tag_name }}"
+          else
+            TAG="${{ needs.build.outputs.app_version }}"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_info.outputs.tag }}
+          name: Release ${{ steps.release_info.outputs.tag }}
+          files: dist/*.zip
+          generate_release_notes: true

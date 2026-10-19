@@ -1,6 +1,8 @@
 build/
 dist/
 .*/
+!/.github/
+!/.github/**
 __pycache__/
 cache/
 test*.py
