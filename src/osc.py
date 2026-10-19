@@ -396,7 +396,12 @@ class OscHandler:
 				self.osc_dispatcher.map(self.osc_use_both_path, self.osc_server_handler_both)
 				self.osc_dispatcher.map(self.osc_stt_mode_path, self.osc_server_handler_stt_mode)
 
-				self.osc_server = osc_server.ThreadingOSCUDPServer((self.osc_server_ip, self.osc_server_port), self.osc_dispatcher, asyncio.get_event_loop())
+				try:
+					_loop = asyncio.get_event_loop()
+				except RuntimeError:
+					_loop = asyncio.new_event_loop()
+					asyncio.set_event_loop(_loop)
+				self.osc_server = osc_server.ThreadingOSCUDPServer((self.osc_server_ip, self.osc_server_port), self.osc_dispatcher, _loop)
 				threading.Thread(target = self.osc_server_serve, daemon = True).start()
 
 				if self.osc_server_port == 0:
@@ -744,6 +749,7 @@ class RepeatedTimer(object):
 	def start(self):
 		if not self.is_running:
 			self._timer = Timer(self.interval, self._run)
+			self._timer.daemon = True
 			self._timer.start()
 			self.is_running = True
 

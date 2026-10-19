@@ -1,3 +1,5 @@
+import os
+os.environ["HF_HUB_DISABLE_XET"] = "1"
 import tkinter as tk
 import tkinter.scrolledtext as ScrolledText
 import json
@@ -5,11 +7,11 @@ import pyaudio
 import keyboard
 import glob
 import shutil
-import os
 import torch
+from time import time
 from helper import get_best_compute_type, get_absolute_path
 from ctranslate2 import get_supported_compute_types
-from config import config_struct, LANGUAGE_TO_KEY, WHISPER_MODELS
+from config import config_struct, LANGUAGE_TO_KEY, WHISPER_MODELS, WHISTLE_LANGUAGE_NAMES
 from multiprocessing import cpu_count
 import logging
 import traceback
@@ -27,6 +29,7 @@ class MainWindow(object):
         self.FONT = "Cascadia Code"
         self.enter_pressed = False
         self.config_ui_open = False
+        self.btn_update = None
 
         self.tkui = tk.Tk()
         if x and y:
@@ -125,10 +128,21 @@ class MainWindow(object):
             self.button_profile_remove.place(x=276, y=344)
             self.button_profile_add.place(x=246, y=344)
 
-    def show_update_button(self, text):
-        self.btn_update = tk.Button(self.tkui, text=text)
-        self.btn_update.configure(bg="#333333", fg="white", font=(self.FONT, 10), anchor="center", highlightthickness=0, activebackground="#555555", activeforeground="white")
-        self.btn_update.place(x=803, y=50, anchor="e")
+    def show_update_button(self, text, command=None):
+        def _apply():
+            try:
+                if getattr(self, 'btn_update', None) is not None:
+                    self.btn_update.configure(text=text, command=command)
+                else:
+                    self.btn_update = tk.Button(self.tkui, text=text, command=command)
+                    self.btn_update.configure(bg="#333333", fg="white", font=(self.FONT, 10), anchor="center", highlightthickness=0, activebackground="#555555", activeforeground="white")
+                    self.btn_update.place(x=803, y=50, anchor="e")
+            except Exception:
+                pass
+        try:
+            self.tkui.after(0, _apply)
+        except Exception:
+            pass
 
     def run_loop(self):
         self.tkui.mainloop()
@@ -138,45 +152,104 @@ class MainWindow(object):
         self.tkui.after(intervall, self.create_loop, *[intervall, func])
 
     def set_status_label(self, text, color="orange"):
-        self.status_lbl.configure(text=text)
-        self.color_lbl.configure(bg=color)
+        def _apply():
+            try:
+                self.status_lbl.configure(text=text)
+                self.color_lbl.configure(bg=color)
+            except Exception:
+                pass
+        try:
+            self.tkui.after(0, _apply)
+        except Exception:
+            pass
         log.info(text)
 
     def set_text_label(self, text):
-        self.text_lbl.configure(text=text)
-
-    def loading_status(self, s: str):
+        def _apply():
+            try:
+                self.text_lbl.configure(text=text)
+            except Exception:
+                pass
         try:
-            self.set_text_label(f"Downloading Model:{s[s.rindex('|')+1:]}")
+            self.tkui.after(0, _apply)
         except Exception:
             pass
-        self.tkui.update()
 
-    def set_time_label(self, time):
-        self.time_lbl.configure(text=f"{time:0.3f}s")
+    def loading_status(self, s: str):
+        now = time()
+        if now - getattr(self, '_last_loading_update', 0) < 0.08:
+            return
+        self._last_loading_update = now
+        try:
+            if "|" in s:
+                progress_info = s[s.rindex('|')+1:].strip()
+                self.set_text_label(f"Downloading Model:\n{progress_info}")
+            elif "converting" in s.lower():
+                self.set_text_label("Converting model to CTranslate2 format...\nPlease wait, this takes 1-2 minutes.")
+            elif "downloading" in s.lower():
+                self.set_text_label("Downloading model files...")
+            elif "loaded" in s.lower() or "ready" in s.lower():
+                self.set_text_label("Loading model into memory...")
+        except Exception:
+            pass
+
+    def set_time_label(self, time_val):
+        def _apply():
+            try:
+                self.time_lbl.configure(text=f"{time_val:0.3f}s")
+            except Exception:
+                pass
+        try:
+            self.tkui.after(0, _apply)
+        except Exception:
+            pass
 
     def clear_textfield(self):
-        self.textfield.delete(0, tk.END)
+        def _apply():
+            try:
+                self.textfield.delete(0, tk.END)
+            except Exception:
+                pass
+        try:
+            self.tkui.after(0, _apply)
+        except Exception:
+            pass
 
     def on_closing(self):
         self.tkui.destroy()
 
     def set_button_enabled(self, state=False):
-        if state:
-            self.btn_settings.configure(state="normal")
-            self.btn_refresh.configure(state="normal")
-        else:
-            self.btn_settings.configure(state="disabled")
-            self.btn_refresh.configure(state="disabled")
+        def _apply():
+            try:
+                if state:
+                    self.btn_settings.configure(state="normal")
+                    self.btn_refresh.configure(state="normal")
+                else:
+                    self.btn_settings.configure(state="disabled")
+                    self.btn_refresh.configure(state="disabled")
+            except Exception:
+                pass
+        try:
+            self.tkui.after(0, _apply)
+        except Exception:
+            pass
 
     def get_coordinates(self):
         return (self.tkui.winfo_x(), self.tkui.winfo_y())
     
     def toggle_copy_button(self, state):
-        if state:
-            self.btn_copy.place(x=800, y=290, anchor="e")
-        else:
-            self.btn_copy.place_forget()
+        def _apply():
+            try:
+                if state:
+                    self.btn_copy.place(x=800, y=290, anchor="e")
+                else:
+                    self.btn_copy.place_forget()
+            except Exception:
+                pass
+        try:
+            self.tkui.after(0, _apply)
+        except Exception:
+            pass
 
 class ChangeLogViewer(tk.Toplevel):
     def __init__(self, script_path, x=None, y=None):
@@ -203,8 +276,8 @@ class ChangeLogViewer(tk.Toplevel):
         self.button_close.configure(bg="#333333", fg="white", font=(self.FONT, 10), anchor="center", highlightthickness=0, activebackground="#555555", activeforeground="white")
         self.button_close.pack(side="bottom", fill="x", expand=1, pady=8, padx=8)
 
-        # add button to navigate to https://github.com/I5UCC/VRCTextboxSTT/releases/latest
-        self.button_github = tk.Button(self, text="Show Latest Release", command=lambda: os.system("start https://github.com/I5UCC/VRCTextboxSTT/releases/latest"))
+        # add button to navigate to https://github.com/Mage-Enderman/VRCTextboxSTT/releases/latest
+        self.button_github = tk.Button(self, text="Show Latest Release", command=lambda: os.system("start https://github.com/Mage-Enderman/VRCTextboxSTT/releases/latest"))
         self.button_github.configure(bg="#333333", fg="white", font=(self.FONT, 10), anchor="center", highlightthickness=0, activebackground="#555555", activeforeground="white")
         self.button_github.pack(side="bottom", fill="x", expand=1, pady=8, padx=8)
 
@@ -214,11 +287,11 @@ class ChangeLogViewer(tk.Toplevel):
 
     
     def run(self):
-        url = "https://raw.githubusercontent.com/I5UCC/VRCTextboxSTT/main/Latest_Changelog.md"
+        url = "https://raw.githubusercontent.com/Mage-Enderman/VRCTextboxSTT/main/Latest_Changelog.md"
         headers = {'Cache-Control': 'no-cache'}
         
         try:
-            changelog = requests.request("GET", "https://raw.githubusercontent.com/I5UCC/VRCTextboxSTT/main/Latest_Changelog.md", headers=headers).text
+            changelog = requests.request("GET", "https://raw.githubusercontent.com/Mage-Enderman/VRCTextboxSTT/main/Latest_Changelog.md", headers=headers).text
             version = changelog.split('\n')[0].replace("#", "").strip()
             self.text.config(state=tk.NORMAL)
             self.text.delete(1.0, tk.END)
@@ -292,7 +365,13 @@ class LogFrame(tk.Frame, logging.Handler):
 class SettingsWindow:
     def __init__(self, conf: config_struct, config_path, script_path, get_coodinates, restart_func):
         self.restart_func = restart_func
-        self.languages = ["Auto Detect"] + list(LANGUAGE_TO_KEY.keys())
+        self.default_languages = ["Auto Detect"] + list(LANGUAGE_TO_KEY.keys())
+        self.whistle_languages = list(WHISTLE_LANGUAGE_NAMES)
+        raw_initial_model = (conf.whisper.model or "").strip().lower()
+        if "whistle" in raw_initial_model:
+            self.languages = list(self.whistle_languages)
+        else:
+            self.languages = list(self.default_languages)
         self.icon_path = get_absolute_path("resources/icon.ico", script_path)
         
         self.config = conf
@@ -439,8 +518,8 @@ class SettingsWindow:
         self.label_translate.grid(row=7, column=0, padx=PADX_L, pady=PADY, sticky='es')
         self.value_translate = tk.StringVar(self.tkui)
         self.value_translate.set("OFF" if not self.config.translator.language else self.config.translator.language)
-        self.languages[0] = "OFF"
-        self.opt_translate = tk.OptionMenu(self.tkui, self.value_translate, *self.languages)
+        self.translate_languages = ["OFF"] + list(LANGUAGE_TO_KEY.keys())
+        self.opt_translate = tk.OptionMenu(self.tkui, self.value_translate, *self.translate_languages)
         self.opt_translate.configure(bg="#333333", fg="white", font=(self.FONT, 10), width=19, anchor="w", highlightthickness=0, activebackground="#555555", activeforeground="white")
         self.opt_translate.grid(row=7, column=1, padx=PADX_R, pady=PADY, sticky='ws')
         self.opt_translate.bind("<Enter>", (lambda event: self.show_tooltip("Translate the transcription to another language.")))
@@ -807,6 +886,14 @@ class SettingsWindow:
     def open_vad_window(self):
         _ = VADSettingsWindow(self.config, self.config_path, self.icon_path, self.get_coordinates)
 
+    def update_language_options(self, languages):
+        if not hasattr(self, 'opt_language'):
+            return
+        menu = self.opt_language["menu"]
+        menu.delete(0, "end")
+        for lang in languages:
+            menu.add_command(label=lang, command=tk._setit(self.value_language, lang))
+
     def model_changed(self, *args):
         if self.value_model.get() == "custom":
             self.opt_model.grid_forget()
@@ -817,10 +904,20 @@ class SettingsWindow:
             self.entry_model.delete(0, tk.END)
             self.entry_model.insert(0, self.value_model.get())
         
-        if "distil" in self.value_model.get() or "large" in self.value_model.get() or "phonon" in self.value_model.get():
+        raw_model = self.value_model.get().strip().lower()
+        if "distil" in raw_model or "large" in raw_model or "phonon" in raw_model:
+            self.update_language_options(self.default_languages)
             self.value_language.set("english")
             self.opt_language.configure(state="disabled")
+        elif "whistle" in raw_model:
+            self.update_language_options(self.whistle_languages)
+            if self.value_language.get() not in self.whistle_languages:
+                self.value_language.set("Auto Detect")
+            self.opt_language.configure(state="normal")
         else:
+            self.update_language_options(self.default_languages)
+            if self.value_language.get() not in self.default_languages:
+                self.value_language.set("Auto Detect")
             self.opt_language.configure(state="normal")
             
     def entry_model_enter_event(self, text):

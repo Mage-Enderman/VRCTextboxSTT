@@ -4,6 +4,16 @@ TITLE TextboxSTT Updater
 
 cd /d %~dp0\..
 
+if not exist .git (
+	echo Initializing repository for Mage-Enderman/VRCTextboxSTT...
+	.\git\bin\git.exe init
+	.\git\bin\git.exe remote add origin https://github.com/Mage-Enderman/VRCTextboxSTT.git
+	.\git\bin\git.exe fetch origin main
+	.\git\bin\git.exe checkout -f -B main origin/main
+) else (
+	.\git\bin\git.exe remote set-url origin https://github.com/Mage-Enderman/VRCTextboxSTT.git
+)
+
 .\git\bin\git.exe status --porcelain --untracked-files=no | find /i "M"
 
 if not errorlevel 1  (
@@ -14,10 +24,10 @@ if not errorlevel 1  (
 
 if /i "%answer%" EQU "n" (
 	.\git\bin\git.exe reset --hard
-	.\git\bin\git.exe pull --rebase
+	.\git\bin\git.exe pull --rebase origin main
 ) else (
 	.\git\bin\git.exe stash
-	.\git\bin\git.exe pull --rebase
+	.\git\bin\git.exe pull --rebase origin main
 	.\git\bin\git.exe stash pop
 )
 

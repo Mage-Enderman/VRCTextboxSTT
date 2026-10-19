@@ -130,10 +130,12 @@ WHISPER_MODELS = {
     'large-v3-turbo': 'openai/whisper-large-v3-turbo',
     'distil-small': "distil-whisper/distil-small.en",
     'distil-medium': "distil-whisper/distil-medium.en",
-    'distil-large-v2': "distil-whisper/distil-large-v2"
+    'distil-large-v2': "distil-whisper/distil-large-v2",
+    'distil-large-v3': "distil-whisper/distil-large-v3"
 }
 
 WHISTLE_SUPPORTED_LANGUAGES = {'en', 'de', 'fr', 'es', 'it', 'nl', 'pl'}
+WHISTLE_LANGUAGE_NAMES = ["Auto Detect", "english", "german", "french", "spanish", "italian", "dutch", "polish"]
 
 TRANSLATE_MODELS = {
     "small": "facebook/m2m100_418M",

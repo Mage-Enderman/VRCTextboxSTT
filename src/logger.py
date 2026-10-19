@@ -18,6 +18,7 @@ class LogToFile(object):
         self.level = logging.DEBUG
         self.linebuf = ''
         self.ui_output = None
+        self._in_write = False
 
         logging.basicConfig(
             level=self.level,
@@ -27,10 +28,21 @@ class LogToFile(object):
         )
 
     def write(self, buf):
-        for line in buf.rstrip().splitlines():
-            self.logger.log(self.level, line.rstrip())
-            if self.ui_output:
-                self.ui_output(line.rstrip())
+        if self._in_write:
+            return
+        self._in_write = True
+        try:
+            for line in buf.rstrip().splitlines():
+                if not line.strip():
+                    continue
+                self.logger.log(self.level, line.rstrip())
+                if self.ui_output:
+                    try:
+                        self.ui_output(line.rstrip())
+                    except Exception:
+                        pass
+        finally:
+            self._in_write = False
 
     def flush(self):
         pass
@@ -67,7 +79,10 @@ def process_cache(cache_path, latest_log):
 def get_absolute_path(relative_path, script_path=__file__) -> str:
     """Gets absolute path from relative path"""
     base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(script_path)))
-    return os.path.normpath(os.path.join(base_path, relative_path))
+    path = os.path.normpath(os.path.join(base_path, relative_path))
+    if (relative_path.endswith('/') or relative_path.endswith('\\')) and not path.endswith(os.sep):
+        path += os.sep
+    return path
 
 
 def force_single_instance():

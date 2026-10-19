@@ -1,4 +1,5 @@
 import os
+os.environ["HF_HUB_DISABLE_XET"] = "1"
 import torch
 from helper import get_best_compute_type, measure_time
 from faster_whisper import WhisperModel, __version__ as whisper_version
@@ -119,7 +120,7 @@ class TranscribeHandler(object):
                 log.error(traceback.format_exc())
                 raise
         else:
-            self.whisper_model = self.config_whisper.model if "/" in self.config_whisper.model else WHISPER_MODELS[self.config_whisper.model]
+            self.whisper_model = self.config_whisper.model if "/" in self.config_whisper.model else WHISPER_MODELS.get(self.config_whisper.model, self.config_whisper.model)
             self.is_openai_model = True if "openai" in self.whisper_model else False
             self.language = None
 
@@ -248,13 +249,19 @@ class TranscribeHandler(object):
             str: The path to the loaded model.
         """
         try:
-            model_split = model_name.split('/')
-            _model_path = f"{self.cache_path}{model_split[0]}-{model_split[1]}-ct2-{quantization}"
+            model_name_safe = model_name.replace('/', '-')
+            _model_path = os.path.join(self.cache_path, f"{model_name_safe}-ct2-{quantization}")
             copy_files = ["preprocessor_config.json", "tokenizer.json"]
+            log.info(f"Downloading model '{model_name}'...")
             _converter = TransformersConverter(model_name, copy_files=copy_files)
+            log.info(f"Converting model '{model_name}' to CTranslate2 format ({quantization})...")
             _converter.convert(_model_path, force=False, quantization=quantization)
+            log.info(f"Model ready at {_model_path}")
 
-            rmtree(os.path.join(os.path.expanduser("~"), ".cache", "huggingface"))
+            try:
+                rmtree(os.path.join(os.path.expanduser("~"), ".cache", "huggingface"), ignore_errors=True)
+            except Exception:
+                pass
         except RuntimeError:
             log.info("Model already exists, skipping conversion.")
         except FileNotFoundError:

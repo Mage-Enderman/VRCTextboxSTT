@@ -2,6 +2,7 @@ try:
     import ctypes
     import sys
     import os
+    os.environ["HF_HUB_DISABLE_XET"] = "1"
     sys.path.append(os.path.dirname(__file__))
     DEBUG = len(sys.argv) <= 3
 
@@ -166,8 +167,7 @@ def init():
         log.info(main_window.version)
         update_available, latest_tag = updater.check_for_updates(main_window.version)
         if update_available:
-            main_window.show_update_button(f"Update Available! ({latest_tag})")
-            main_window.btn_update.configure(command=update)
+            main_window.show_update_button(f"Update Available! ({latest_tag})", command=update)
 
     # Initialize Clipboard Handler
     if not clipboard:
@@ -1165,15 +1165,32 @@ def reload(save=False) -> None:
         config_window.on_closing()
         main_window.set_status_label("SETTINGS NOT SAVED - WAITING FOR INPUT", "#00008b")
     
-    try:
-        init()
-    except Exception:
-        log.error("Error reinitializing: ")
-        log.error(traceback.format_exc())
-        main_window.set_status_label("ERROR INITIALIZING, PLEASE CHECK YOUR SETTINGS,\nLOOK INTO cache/latest.log for more info on the error", "red")
-
-    main_window.set_button_enabled(True)
     main_window.config_ui_open = False
+    main_window.set_button_enabled(False)
+
+    def _async_init():
+        try:
+            import asyncio
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        except Exception:
+            pass
+        try:
+            init()
+        except Exception:
+            try:
+                OUT_FILE_LOGGER.remove_ui_output()
+            except Exception:
+                pass
+            log.error("Error reinitializing: ")
+            log.error(traceback.format_exc())
+            main_window.set_status_label("ERROR INITIALIZING, PLEASE CHECK YOUR SETTINGS,\nLOOK INTO cache/latest.log for more info on the error", "red")
+            main_window.set_text_label("Error loading model. Check logs.")
+        finally:
+            main_window.set_button_enabled(True)
+
+    thread_init = Thread(target=_async_init, daemon=True)
+    thread_init.start()
 
 
 def load_fonts() -> None:
