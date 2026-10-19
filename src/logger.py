@@ -43,15 +43,13 @@ class LogToFile(object):
 
 def process_cache(cache_path, latest_log):
     try:
-        os.mkdir(cache_path)
-    except FileExistsError:
-        pass
+        os.makedirs(cache_path, exist_ok=True)
     except Exception:
         log.fatal("Failed to create cache directory: ")
         log.error(traceback.format_exc())
 
     try:
-        logs = glob(cache_path + "/*.log")
+        logs = glob(os.path.join(cache_path, "*.log"))
         if len(logs) >= 5:
             logs.sort(key=os.path.getmtime)
             for log in logs[:-5]:
@@ -69,7 +67,7 @@ def process_cache(cache_path, latest_log):
 def get_absolute_path(relative_path, script_path=__file__) -> str:
     """Gets absolute path from relative path"""
     base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(script_path)))
-    return os.path.join(base_path, relative_path)
+    return os.path.normpath(os.path.join(base_path, relative_path))
 
 
 def force_single_instance():

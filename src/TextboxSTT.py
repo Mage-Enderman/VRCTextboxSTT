@@ -47,9 +47,16 @@ try:
 
     log = logging.getLogger("TextboxSTT")
 
-    import pkg_resources
-    installed_packages = pkg_resources.working_set
-    installed_packages_list = sorted(["%s==%s" % (i.key, i.version) for i in installed_packages])
+    try:
+        import pkg_resources
+        installed_packages = pkg_resources.working_set
+        installed_packages_list = sorted(["%s==%s" % (i.key, i.version) for i in installed_packages])
+    except Exception:
+        try:
+            import importlib.metadata
+            installed_packages_list = sorted(["%s==%s" % (dist.metadata['Name'], dist.version) for dist in importlib.metadata.distributions()])
+        except Exception:
+            installed_packages_list = []
     log.debug(installed_packages_list)
     log.debug("Python Version: " + sys.version)
     FIRST_LAUNCH = False
@@ -65,11 +72,9 @@ try:
         ctypes.windll.user32.MessageBoxW(0, f"You are using an unsupported version of Python ({python_version}) for this version of TextboxSTT ({VERSION}), please reinstall the newest version of TextboxSTT from github.", "TextboxSTT - Unsupported Python Version", 0)
 
     try:
-        os.mkdir(CONFIGS_PATH)
-    except FileExistsError:
-        pass
+        os.makedirs(CONFIGS_PATH, exist_ok=True)
     except Exception:
-        log.fatal("Failed to create cache directory: ")
+        log.fatal("Failed to create configs directory: ")
         log.error(traceback.format_exc())
     
     # Move old config to new location
